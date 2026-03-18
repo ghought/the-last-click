@@ -2,3 +2,4 @@
 // Change this before deploying. Nobody should ever see this number.
 export const MAX_CLICKS = parseInt(process.env.MAX_CLICKS, 10) || 20000;
 export const PORT = process.env.PORT || 3000;
+export const ADMIN_SECRET = process.env.ADMIN_SECRET || 'change-me-before-deploy';

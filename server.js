@@ -2,7 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { MAX_CLICKS, PORT } from './config.js';
+import { MAX_CLICKS, PORT, ADMIN_SECRET } from './config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
@@ -180,6 +180,70 @@ app.post('/api/click', (req, res) => {
       yourClick: clickNumber,
       recentHistory: state.history.slice(-10),
     });
+  });
+});
+
+// --- Admin ---
+
+// Remove a name from history + leaderboard
+// POST /api/admin/remove { secret, name }
+app.post('/api/admin/remove', (req, res) => {
+  const { secret, name } = req.body || {};
+
+  if (secret !== ADMIN_SECRET) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  if (!name) {
+    return res.status(400).json({ error: 'Name is required.' });
+  }
+
+  withLock(async () => {
+    const lowerName = name.toLowerCase();
+
+    // Remove from history
+    const beforeHistory = state.history.length;
+    state.history = state.history.filter(
+      (entry) => entry.name.toLowerCase() !== lowerName
+    );
+    const removedHistory = beforeHistory - state.history.length;
+
+    // Remove from leaderboard
+    let removedLeaderboard = 0;
+    if (state.leaderboard) {
+      for (const key of Object.keys(state.leaderboard)) {
+        if (key.toLowerCase() === lowerName) {
+          removedLeaderboard += state.leaderboard[key];
+          delete state.leaderboard[key];
+        }
+      }
+    }
+
+    saveState();
+
+    res.json({
+      removed: {
+        historyEntries: removedHistory,
+        leaderboardClicks: removedLeaderboard,
+      },
+      currentClicks: state.clicks,
+    });
+  });
+});
+
+// Reset the entire game
+// POST /api/admin/reset { secret }
+app.post('/api/admin/reset', (req, res) => {
+  const { secret } = req.body || {};
+
+  if (secret !== ADMIN_SECRET) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  withLock(async () => {
+    state = { ...INITIAL_STATE, history: [], leaderboard: {} };
+    saveState();
+    res.json({ message: 'Game reset.', state });
   });
 });
 
