@@ -208,7 +208,7 @@ app.post('/api/admin/remove', (req, res) => {
     );
     const removedHistory = beforeHistory - state.history.length;
 
-    // Remove from leaderboard
+    // Remove from leaderboard and subtract from total clicks
     let removedLeaderboard = 0;
     if (state.leaderboard) {
       for (const key of Object.keys(state.leaderboard)) {
@@ -218,6 +218,9 @@ app.post('/api/admin/remove', (req, res) => {
         }
       }
     }
+
+    // Subtract removed clicks from total count
+    state.clicks = Math.max(0, state.clicks - removedLeaderboard);
 
     saveState();
 
