@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Last Click</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23FF0000'/></svg>" />
+</head>
+<body>
+
+  <!-- Tab navigation -->
+  <nav id="tabs">
+    <button class="tab active" data-tab="game">PLAY</button>
+    <button class="tab" data-tab="leaderboard">LEADERBOARD</button>
+  </nav>
+
+  <!-- Active game -->
+  <div id="game" class="panel">
+    <div id="counter-label">TOTAL CLICKS</div>
+    <div id="counter">0</div>
+
+    <div id="input-group">
+      <input
+        id="name-input"
+        type="text"
+        placeholder="YOUR NAME"
+        maxlength="40"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </div>
+
+    <button id="the-button">
+      <span id="btn-text">CLICK</span>
+    </button>
+
+    <div id="subtext">Every click could be the last.</div>
+
+    <div id="ticker"></div>
+  </div>
+
+  <!-- Leaderboard -->
+  <div id="leaderboard" class="panel" hidden>
+    <div id="lb-title">MOST CLICKS</div>
+    <div id="lb-list"></div>
+  </div>
+
+  <!-- Memorial (shown when broken) -->
+  <div id="memorial" hidden>
+    <div id="memorial-label">THE LAST CLICK</div>
+    <div id="winner-name"></div>
+    <div id="winner-click"></div>
+    <div id="memorial-sub">The button is broken. There will be no more clicks.</div>
+  </div>
+
+  <!-- Screen flash overlay -->
+  <div id="flash-overlay"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
