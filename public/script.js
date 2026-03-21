@@ -24,6 +24,7 @@ nameInput.addEventListener('input', () => {
 
 let clicking = false;
 let activeTab = 'game';
+let gameBroken = false;
 let lastTickerClick = 0; // track highest click# in ticker to avoid redundant re-renders
 
 // --- API ---
@@ -58,8 +59,15 @@ tabs.addEventListener('click', (e) => {
   activeTab = target;
   tabs.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === target));
 
-  game.hidden = target !== 'game';
-  leaderboardPanel.hidden = target !== 'leaderboard';
+  if (gameBroken) {
+    // When broken: PLAY = memorial, LEADERBOARD = leaderboard
+    memorial.hidden = target !== 'game';
+    leaderboardPanel.hidden = target !== 'leaderboard';
+    game.hidden = true;
+  } else {
+    game.hidden = target !== 'game';
+    leaderboardPanel.hidden = target !== 'leaderboard';
+  }
 
   if (target === 'leaderboard') loadLeaderboard();
 });
@@ -139,11 +147,16 @@ function addTickerEntry(name, clickNumber) {
 }
 
 function showMemorial(winner, clicks) {
+  gameBroken = true;
   winnerName.textContent = winner.name;
   winnerClick.textContent = `Click #${clicks.toLocaleString()}`;
-  memorial.hidden = false;
-  tabs.hidden = true;
-  leaderboardPanel.hidden = true;
+  game.hidden = true;
+
+  // Show memorial on PLAY tab, leaderboard on LEADERBOARD tab
+  memorial.hidden = activeTab !== 'game';
+  leaderboardPanel.hidden = activeTab !== 'leaderboard';
+
+  if (activeTab === 'leaderboard') loadLeaderboard();
 
   requestAnimationFrame(() => {
     memorial.classList.add('revealed');
@@ -238,7 +251,7 @@ button.addEventListener('click', async () => {
 setInterval(async () => {
   try {
     const data = await fetchState();
-    if (data.broken && !game.hidden) {
+    if (data.broken && !gameBroken) {
       triggerBreak(data.winner, data.clicks);
     } else if (!data.broken) {
       counter.textContent = data.clicks.toLocaleString();
@@ -256,19 +269,22 @@ setInterval(async () => {
 
 // --- Init ---
 
+// Hide game until we know the state (prevents flash of game UI when broken)
+game.hidden = true;
+
 (async () => {
   try {
     const [state, history] = await Promise.all([fetchState(), fetchHistory()]);
 
-    counter.textContent = state.clicks.toLocaleString();
-
     if (state.broken) {
-      game.hidden = true;
       showMemorial(state.winner, state.clicks);
     } else {
+      counter.textContent = state.clicks.toLocaleString();
+      game.hidden = false;
       renderTicker(history);
     }
   } catch {
     counter.textContent = '???';
+    game.hidden = false;
   }
 })();
